@@ -22,6 +22,8 @@ public:
     Entry makeEntry(const uint &address);
     Entry &getEntryForNewData(const uint &address);
     Cache &markAsDirty(const DataBlock &data_block);
+    Cache &updateLRU(const uint &set);
+    Ref<Entry> findEntry(const uint &address);
     uint getNumOfAccess() const {return _access_counter;}
     uint getAccessTimeCycles() const {return _access_time_cycles;}
 
@@ -32,7 +34,7 @@ private: //methods
     Cache &incrementTime();
     Cache &insert(Way &way, const DataBlock &data_block);
     int findAvailalbeWay(const uint &set);
-    Ref<Entry> findEntry(const uint &address);
+
 
 
 private: //members

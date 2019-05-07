@@ -10,7 +10,7 @@ public:
         _access_counter(0),
         _access_time_cycles(access_time_cycles) {}
 
-    Memory &access() {_access_counter++}
+    Memory &access() {_access_counter++; return *this;}
     uint getAccessTimeCycles() const {return _access_time_cycles;}
 
 private:

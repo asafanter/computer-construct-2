@@ -13,10 +13,10 @@ public:
     unsigned int getTime() const {return _time;}
     DataBlock &getDataBlock() {return _data_block;}
     const DataBlock &getDataBlock() const {return _data_block;}
-    Entry &incrementTime() {_time++;}
-    Entry &setDataBlock(const DataBlock &new_data_block) {_data_block = new_data_block;}
-    Entry &removeDataBlock() {_data_block.setState(DataBlock::State::INVALID);}
-    Entry &resetTime() {_time = 0;}
+    Entry &incrementTime() {_time++; return *this;}
+    Entry &setDataBlock(const DataBlock &new_data_block) {_data_block = new_data_block; return *this;}
+    Entry &removeDataBlock() {_data_block.setState(DataBlock::State::INVALID); return *this;}
+    Entry &resetTime() {_time = 0; return *this;}
 
 private:
     unsigned int _tag;

@@ -103,6 +103,13 @@ Cache &Cache::markAsDirty(const DataBlock &data_block)
     return *this;
 }
 
+Cache &Cache::updateLRU(const uint &set)
+{
+    findLRU(set).resetTime();
+
+    return *this;
+}
+
 Entry &Cache::findLRU(const uint &set)
 {
     unsigned int way_contains_lru_id = 0;
@@ -125,11 +132,11 @@ bool Cache::read(const uint &address)
 
     Ref<Entry> entry = findEntry(address);
     bool is_contains = !entry.isNull();
-    entry->resetTime();
 
     if(is_contains)
     {
         _hits_counter++;
+        entry->resetTime();
         return true;
     }
     else
@@ -142,23 +149,25 @@ bool Cache::read(const uint &address)
 
 bool Cache::write(const unsigned int &address)
 {
-//    bool is_contains = isContains(address);
+    _access_counter++;
+    incrementTime();
 
-//    if(isContains(address))
-//    {
-//        _hits_counter++;
-//        findDataBlock(address).setState(DataBlock::State::DIRTY);
-//    }
-//    else
-//    {
-//        _miss_counter++;
-//        allocate(address);
-//        findDataBlock(address).setState(DataBlock::State::DIRTY);
-//    }
+    Ref<Entry> entry = findEntry(address);
+    bool is_contains = !entry.isNull();
 
-//    incrementTime();
+    if(is_contains)
+    {
+        _hits_counter++;
+        entry->getDataBlock().setState(DataBlock::State::DIRTY);
+        entry->resetTime();
+        return true;
+    }
+    else
+    {
+        _miss_counter++;
+    }
 
-//    return is_contains;
+    return is_contains;
 }
 
 void Cache::initWays()
