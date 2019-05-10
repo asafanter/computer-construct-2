@@ -18,9 +18,12 @@ public:
     bool isContains(const uint &address);
     uint getAccessTimeCycles() const {return _access_time_cycles;}
     VictimCache &insert(const uint &address);
+    VictimCache &remove(const uint &address);
     bool read(const uint &address);
     bool write(const uint &address);
     Ref<DataBlock> findDataBlock(const uint &address);
+    uint getTotalTime() const {return _access_time_cycles * _access_counter;}
+    uint getNumOfAccess() const {return _access_counter;}
 
 private: //methods
     uint calcTag(const uint &address);

@@ -3,11 +3,13 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include "Cache.h"
 #include "VictimCache.h"
 #include "Memory.h"
 
 using uint = unsigned int;
+using string = std::string;
 
 class CacheSimulator
 {
@@ -33,23 +35,25 @@ public:
 
     CacheSimulator &read(const unsigned int &address);
     CacheSimulator &write(const unsigned int &address);
+    double getAvgTime() const;
+    double getL1MissRate() const {return _L1.getMissRate();}
+    double getL2MissRate() const {return _L2.getMissRate();}
 
 private:
-    bool tryReadL1(const uint &address);
-    bool tryReadL2(const uint &address);
     bool tryReadVictimCache(const uint &address);
     bool tryWriteL1(const uint &address);
     bool tryWriteL2(const uint &address);
     bool tryWriteVictimCache(const uint &address);
-    CacheSimulator &bringDataToL1(const uint &address);
-    CacheSimulator &bringDataToL2(const uint &address);
-    CacheSimulator &bringDataToVictimCache(const uint &adress);
+    CacheSimulator &bringDataToL1(const DataBlock &data_block);
+    CacheSimulator &bringDataToL2(const DataBlock &data_block);
+    CacheSimulator &bringDataToVictimCache(const DataBlock &data_block);
     CacheSimulator &bringDataFromMemory(const uint &address);
 
 private: //members
     uint _num_of_caches;
     uint _mem_access_time_cycles;
     bool _has_victim_cashe;
+    uint _access_counter;
     WritePolicy _write_policy;
     Cache _L1;
     Cache _L2;

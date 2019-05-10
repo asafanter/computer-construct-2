@@ -11,12 +11,12 @@ VictimCache::VictimCache(const uint &block_size_bytes_log2, const uint &num_of_e
     _hits_counter(0),
     _access_counter(0),
     _miss_counter(0),
-    _entries(num_of_entries)
+    _entries()
 {
-    for(auto entry : _entries)
-    {
-        entry.first = 0;
-    }
+//    for(auto entry : _entries)
+//    {
+//        entry.first = 0;
+//    }
 }
 
 bool VictimCache::isContains(const uint &address)
@@ -39,10 +39,25 @@ VictimCache &VictimCache::insert(const uint &address)
     auto tag = calcTag(address);
     auto data_block = DataBlock(address);
 
-    _entries.push_front(std::pair<uint, DataBlock>(tag, data_block));
-    if(_entries.size() >= _num_of_entries)
+    _entries.push_back(std::pair<uint, DataBlock>(tag, data_block));
+    if(_entries.size() > _num_of_entries)
     {
-        _entries.pop_back();
+        _entries.pop_front();
+    }
+
+    return *this;
+}
+
+VictimCache &VictimCache::remove(const uint &address)
+{
+    auto tag = calcTag(address);
+
+    for(auto it = _entries.begin(); it != _entries.end(); it++)
+    {
+        if((*it).first == tag)
+        {
+            _entries.erase(it);
+        }
     }
 
     return *this;
@@ -81,7 +96,7 @@ Ref<DataBlock> VictimCache::findDataBlock(const uint &address)
 {
     auto tag = calcTag(address);
 
-    for(auto entry : _entries)
+    for(auto &entry : _entries)
     {
         if(entry.first == tag)
         {

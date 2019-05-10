@@ -12,6 +12,8 @@ public:
 
     Memory &access() {_access_counter++; return *this;}
     uint getAccessTimeCycles() const {return _access_time_cycles;}
+    uint getTotalTime() const {return _access_time_cycles * _access_counter;}
+    uint getNumOfAccess() const {return _access_counter;}
 
 private:
     uint _access_counter;

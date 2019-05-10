@@ -22,6 +22,10 @@ public:
     {
         return _ptr;
     }
+    T &get()
+    {
+        return *_ptr;
+    }
 
 private:
     T* _ptr;

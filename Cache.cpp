@@ -170,6 +170,11 @@ bool Cache::write(const unsigned int &address)
     return is_contains;
 }
 
+DataBlock &Cache::findDataBlock(const uint &address)
+{
+    return findEntry(address)->getDataBlock();
+}
+
 void Cache::initWays()
 {
     unsigned int way_size = static_cast<unsigned int>(std::pow(2, _size_bytes)) / _num_of_ways;

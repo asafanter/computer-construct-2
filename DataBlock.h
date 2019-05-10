@@ -13,7 +13,7 @@ public:
     };
 
     DataBlock();
-    DataBlock(const unsigned int &address);
+    explicit DataBlock(const unsigned int &address);
     bool operator == (const DataBlock &data_block);
     State getState() const {return _state;}
     unsigned int getAdress() const {return _address;}

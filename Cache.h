@@ -24,18 +24,18 @@ public:
     Cache &markAsDirty(const DataBlock &data_block);
     Cache &updateLRU(const uint &set);
     Ref<Entry> findEntry(const uint &address);
+    uint getTotalTime() const {return _access_time_cycles * _access_counter;}
     uint getNumOfAccess() const {return _access_counter;}
     uint getAccessTimeCycles() const {return _access_time_cycles;}
+    double getMissRate() const {return static_cast<double>(_miss_counter) / static_cast<double>(_access_counter);}
+    Cache &incrementTime();
 
 private: //methods
     void initWays();
     uint calcTag(const uint &address) const;
     uint calcSet(const uint &address) const;
-    Cache &incrementTime();
     Cache &insert(Way &way, const DataBlock &data_block);
     int findAvailalbeWay(const uint &set);
-
-
 
 private: //members
     uint _size_bytes;
