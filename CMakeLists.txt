@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(CacheSim)
+project(cacheSim)
 
 set(SOURCE_FILES
-    main.cpp
     cacheSim.cpp
     DataBlock.h
     DataBlock.cpp

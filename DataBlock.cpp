@@ -7,9 +7,9 @@ DataBlock::DataBlock() :
 
 }
 
-DataBlock::DataBlock(const unsigned int &address) :
+DataBlock::DataBlock(const unsigned int &address, const State &state) :
     _address(address),
-    _state(DataBlock::State::VALID)
+    _state(state)
 {
 
 }

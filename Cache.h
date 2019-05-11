@@ -10,7 +10,7 @@ using uint = unsigned int;
 class Cache
 {
 public:
-    Cache(const uint & size_bytes, const uint &block_size_bytes,
+    Cache(const uint & size_bytes_log2, const uint &block_size_bytes,
           const uint & num_of_ways,
           const uint &access_time_cycles);
 
@@ -30,7 +30,7 @@ public:
     double getMissRate() const {return static_cast<double>(_miss_counter) / static_cast<double>(_access_counter);}
     Cache &incrementTime();
 
-private: //methods
+public: //methods
     void initWays();
     uint calcTag(const uint &address) const;
     uint calcSet(const uint &address) const;
@@ -38,7 +38,7 @@ private: //methods
     int findAvailalbeWay(const uint &set);
 
 private: //members
-    uint _size_bytes;
+    uint _size_bytes_log2;
     uint _block_size_bytes;
     uint _access_time_cycles;
     uint _num_of_ways;

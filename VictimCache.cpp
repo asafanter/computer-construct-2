@@ -48,6 +48,19 @@ VictimCache &VictimCache::insert(const uint &address)
     return *this;
 }
 
+VictimCache &VictimCache::insert(const DataBlock &data_block)
+{
+    auto tag = calcTag(data_block.getAdress());
+
+    _entries.push_back(std::pair<uint, DataBlock>(tag, data_block));
+    if(_entries.size() > _num_of_entries)
+    {
+        _entries.pop_front();
+    }
+
+    return *this;
+}
+
 VictimCache &VictimCache::remove(const uint &address)
 {
     auto tag = calcTag(address);
@@ -57,6 +70,7 @@ VictimCache &VictimCache::remove(const uint &address)
         if((*it).first == tag)
         {
             _entries.erase(it);
+            break;
         }
     }
 

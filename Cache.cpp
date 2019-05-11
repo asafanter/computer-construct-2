@@ -1,17 +1,17 @@
 #include <cmath>
 #include "Cache.h"
 
-Cache::Cache(const uint &size_bytes, const uint &block_size_bytes,
+Cache::Cache(const uint &size_bytes_log2, const uint &block_size_bytes,
              const uint &num_of_ways,
              const uint &access_time_cycles) :
-    _size_bytes(size_bytes),
+    _size_bytes_log2(size_bytes_log2),
     _block_size_bytes(block_size_bytes),
     _access_time_cycles(access_time_cycles),
     _num_of_ways(static_cast<uint>(std::pow(2, num_of_ways))),
-    _access_counter(0),
-    _ways(),
     _hits_counter(0),
-    _miss_counter(0)
+    _access_counter(0),
+    _miss_counter(0),
+    _ways()
 {
     initWays();
 }
@@ -177,7 +177,8 @@ DataBlock &Cache::findDataBlock(const uint &address)
 
 void Cache::initWays()
 {
-    unsigned int way_size = static_cast<unsigned int>(std::pow(2, _size_bytes)) / _num_of_ways;
+    unsigned int way_size = static_cast<unsigned int>(std::pow(2, _size_bytes_log2 - _block_size_bytes) /
+            _num_of_ways);
 
     for(unsigned int i = 0; i < _num_of_ways; i++)
     {
@@ -188,14 +189,19 @@ void Cache::initWays()
 
 uint Cache::calcTag(const uint &address) const
 {
-    uint entries_per_way_log2 = _size_bytes -  static_cast<uint>(std::log2(_num_of_ways));
+    uint entries_per_way= static_cast<unsigned int>(std::pow(2, _size_bytes_log2 - _block_size_bytes) /
+                                                          _num_of_ways);
+    uint entries_per_way_log2 = static_cast<uint>(std::log2(entries_per_way));
+
     return address >> (entries_per_way_log2 + _block_size_bytes);
 }
 
 uint Cache::calcSet(const uint &address) const
 {
     auto tmp = address >> _block_size_bytes;
-    uint entries_per_way_log2 = _size_bytes -  static_cast<uint>(std::log2(_num_of_ways));
+    uint entries_per_way = static_cast<unsigned int>(std::pow(2, _size_bytes_log2 - _block_size_bytes) /
+                                                          _num_of_ways);
+    uint entries_per_way_log2 = static_cast<uint>(std::log2(entries_per_way));
 
     unsigned int mask = static_cast<unsigned int>(std::pow(2, entries_per_way_log2)) - 1;
 

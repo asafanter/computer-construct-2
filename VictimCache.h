@@ -18,6 +18,7 @@ public:
     bool isContains(const uint &address);
     uint getAccessTimeCycles() const {return _access_time_cycles;}
     VictimCache &insert(const uint &address);
+    VictimCache &insert(const DataBlock &data_block);
     VictimCache &remove(const uint &address);
     bool read(const uint &address);
     bool write(const uint &address);
@@ -25,7 +26,7 @@ public:
     uint getTotalTime() const {return _access_time_cycles * _access_counter;}
     uint getNumOfAccess() const {return _access_counter;}
 
-private: //methods
+public: //methods
     uint calcTag(const uint &address);
 
 private: //members

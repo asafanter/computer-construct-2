@@ -17,6 +17,8 @@ public:
     Entry &setDataBlock(const DataBlock &new_data_block) {_data_block = new_data_block; return *this;}
     Entry &removeDataBlock() {_data_block.setState(DataBlock::State::INVALID); return *this;}
     Entry &resetTime() {_time = 0; return *this;}
+    Entry &markAsDirty() {_data_block.markAsDirty(); return *this;}
+    Entry &markAsValid() {_data_block.markAsValid(); return *this;}
 
 private:
     unsigned int _tag;

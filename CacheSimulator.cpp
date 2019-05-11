@@ -28,7 +28,7 @@ CacheSimulator::CacheSimulator(const uint &num_of_caches,
 }
 
 CacheSimulator &CacheSimulator::read(const unsigned int &address)
-{
+{ 
     _access_counter++;
 
     if(_L1.read(address))
@@ -38,7 +38,7 @@ CacheSimulator &CacheSimulator::read(const unsigned int &address)
 
     if(_L2.read(address))
     {
-        bringDataToL1(_L2.findDataBlock(address));
+        bringDataToL1(address, _L2.findDataBlock(address).getState());
         return *this;
     }
 
@@ -46,8 +46,8 @@ CacheSimulator &CacheSimulator::read(const unsigned int &address)
     {
         if(_victim_cache->read(address))
         {
-            bringDataToL2(_victim_cache->findDataBlock(address).get());
-            bringDataToL1(_L2.findDataBlock(address));
+            bringDataToL2(address, _victim_cache->findDataBlock(address)->getState());
+            bringDataToL1(address, _L2.findDataBlock(address).getState());
             _victim_cache->remove(address);
             return *this;
         }
@@ -66,7 +66,7 @@ CacheSimulator &CacheSimulator::write(const unsigned int &address)
 {
     _access_counter++;
 
-    if(tryWriteL1(address))
+    if(_L1.write(address))
     {
         return *this;
     }
@@ -86,8 +86,9 @@ CacheSimulator &CacheSimulator::write(const unsigned int &address)
        if(_write_policy == WritePolicy::ALLOCATE)
        {
            DataBlock data_block(address);
-           bringDataToL2(data_block);
-           bringDataToL1(_L2.findDataBlock(address));
+           bringDataToL2(address, data_block.getState());
+           bringDataToL1(address, _L2.findDataBlock(address).getState());
+           _L1.findDataBlock(address).setState(DataBlock::State::DIRTY);
        }
     }
 
@@ -107,40 +108,13 @@ double CacheSimulator::getAvgTime() const
     return static_cast<double>(tot_time) / static_cast<double>(_access_counter);
 }
 
-bool CacheSimulator::tryReadVictimCache(const uint &address)
-{
-    if(_victim_cache->read(address))
-    {       
-        auto data_block = _victim_cache->findDataBlock(address).get();
-
-        bringDataToL2(data_block).bringDataToL1(data_block);
-        return true;
-    }
-
-    DataBlock data_block(address);
-
-    bringDataToVictimCache(data_block).bringDataToL2(data_block).bringDataToL1(data_block);
-
-    return false;
-}
-
-bool CacheSimulator::tryWriteL1(const uint &address)
-{
-    if(_L1.write(address))
-    {
-        return true;
-    }
-
-    return false;
-}
-
 bool CacheSimulator::tryWriteL2(const uint &address)
 {
     if(_L2.write(address))
     {
         if(_write_policy == WritePolicy::ALLOCATE)
         {
-            bringDataToL1(_L2.findDataBlock(address));
+            bringDataToL1(address, _L2.findDataBlock(address).getState());
         }
 
         return true;
@@ -156,28 +130,57 @@ bool CacheSimulator::tryWriteVictimCache(const uint &address)
         if(_write_policy == WritePolicy::ALLOCATE)
         {
             auto data_block = _victim_cache->findDataBlock(address).get();
-            bringDataToL2(data_block).bringDataToL1(data_block);
+            bringDataToL2(address, data_block.getState());
+            bringDataToL1(address, _L2.findDataBlock(address).getState());
+            _victim_cache->remove(address);
         }
         return true;
     }
-
-    if(_write_policy == WritePolicy::ALLOCATE)
+    else
     {
-        DataBlock data_block(address);
-        bringDataToVictimCache(data_block).bringDataToL2(data_block).bringDataToL1(data_block);
+        _memory.access();
+        if(_write_policy == WritePolicy::ALLOCATE)
+        {
+            DataBlock data_block(address, DataBlock::State::DIRTY);
+            bringDataToL2(address, data_block.getState());
+            bringDataToL1(address, _L2.findDataBlock(address).getState());
+        }
     }
 
     return false;
 }
 
-CacheSimulator &CacheSimulator::bringDataToL1(const DataBlock &data_block)
+//CacheSimulator &CacheSimulator::bringDataToL1(const DataBlock &data_block)
+//{
+//    auto address = data_block.getAdress();
+//    Entry &entry = _L1.getEntryForNewData(address);
+
+//    if(entry.getDataBlock().isDirty())
+//    {
+//        auto to_update = _L2.findEntry(entry.getDataBlock().getAdress());
+//        _L2.markAsDirty(to_update->getDataBlock());
+//        _L2.incrementTime();
+//        to_update->resetTime();
+//    }
+
+//    entry = _L1.makeEntry(address);
+
+//    if(data_block.isDirty())
+//    {
+//        entry.markAsDirty();
+//        _L2.findDataBlock(entry.getDataBlock().getAdress()).markAsValid();
+//    }
+
+//    return *this;
+//}
+
+CacheSimulator &CacheSimulator::bringDataToL1(const uint &address, const DataBlock::State &state)
 {
-    auto address = data_block.getAdress();
     Entry &entry = _L1.getEntryForNewData(address);
 
     if(entry.getDataBlock().isDirty())
     {
-        auto to_update = _L2.findEntry(address);
+        auto to_update = _L2.findEntry(entry.getDataBlock().getAdress());
         _L2.markAsDirty(to_update->getDataBlock());
         _L2.incrementTime();
         to_update->resetTime();
@@ -185,63 +188,81 @@ CacheSimulator &CacheSimulator::bringDataToL1(const DataBlock &data_block)
 
     entry = _L1.makeEntry(address);
 
-    if(data_block.isDirty())
+    if(state == DataBlock::State::DIRTY)
     {
-        entry.getDataBlock().setState(DataBlock::State::DIRTY);
-        _L2.findDataBlock(data_block.getAdress()).setState(DataBlock::State::VALID);
+        entry.markAsDirty();
+        _L2.findDataBlock(address).markAsValid();
     }
 
     return *this;
 }
 
-CacheSimulator &CacheSimulator::bringDataToL2(const DataBlock &data_block)
+//CacheSimulator &CacheSimulator::bringDataToL2(const DataBlock &data_block)
+//{
+//    //find entry to insert
+//    auto address = data_block.getAdress();
+//    Entry &entry = _L2.getEntryForNewData(address);
+
+//    auto e = _L1.findEntry(address);
+//    if(!e.isNull())
+//    {
+//        e->getDataBlock().setState(DataBlock::State::INVALID);
+//    }
+
+//    //evacuate entry's data block
+//    if(_has_victim_cashe && entry.getDataBlock().getState() != DataBlock::State::INVALID)
+//    {
+//        _victim_cache->insert(entry.getDataBlock());
+//    }
+
+
+//    entry = _L2.makeEntry(address);
+
+//    if(data_block.isDirty())
+//    {
+//        entry.getDataBlock().markAsDirty();
+//    }
+
+//    return *this;
+//}
+
+CacheSimulator &CacheSimulator::bringDataToL2(const uint &address, const DataBlock::State &state)
 {
-    auto address = data_block.getAdress();
+    //find entry to insert
     Entry &entry = _L2.getEntryForNewData(address);
 
-    if(entry.getDataBlock().isDirty())
+    //snoop
+    auto e = _L1.findEntry(address);
+    if(!e.isNull())
     {
-        if(_has_victim_cashe)
-        {
-            _victim_cache->findDataBlock(address)->setState(DataBlock::State::DIRTY);
-        }
+        e->getDataBlock().setState(DataBlock::State::INVALID);
     }
+
+    //evacuate entry's data block
+    if(_has_victim_cashe && entry.getDataBlock().getState() != DataBlock::State::INVALID)
+    {
+        _victim_cache->insert(entry.getDataBlock());
+    }
+
 
     entry = _L2.makeEntry(address);
 
-    if(data_block.isDirty())
+    if(state == DataBlock::State::DIRTY)
     {
-        entry.getDataBlock().setState(DataBlock::State::DIRTY);
-        _victim_cache->findDataBlock(address)->setState(DataBlock::State::VALID);
+        entry.markAsDirty();
     }
 
     return *this;
 }
 
-CacheSimulator &CacheSimulator::bringDataToVictimCache(const DataBlock &data_block)
-{
-    _victim_cache->insert(data_block.getAdress());
-
-    return *this;
-}
 
 CacheSimulator &CacheSimulator::bringDataFromMemory(const uint &address)
 {
     _memory.access();
     DataBlock data_block(address);
 
-    if(_has_victim_cashe)
-    {     
-        bringDataToVictimCache(data_block);
-        bringDataToL2(_victim_cache->findDataBlock(address).get());
-        bringDataToL1(_L2.findDataBlock(address));
-    }
-    else
-    {
-        bringDataToL2(data_block);
-        bringDataToL1(_L2.findDataBlock(address));
-    }
-
+    bringDataToL2(address, data_block.getState());
+    bringDataToL1(address, _L2.findDataBlock(address).getState());
 
     return *this;
 }

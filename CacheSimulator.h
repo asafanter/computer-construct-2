@@ -40,13 +40,12 @@ public:
     double getL2MissRate() const {return _L2.getMissRate();}
 
 private:
-    bool tryReadVictimCache(const uint &address);
-    bool tryWriteL1(const uint &address);
     bool tryWriteL2(const uint &address);
     bool tryWriteVictimCache(const uint &address);
-    CacheSimulator &bringDataToL1(const DataBlock &data_block);
-    CacheSimulator &bringDataToL2(const DataBlock &data_block);
-    CacheSimulator &bringDataToVictimCache(const DataBlock &data_block);
+//    CacheSimulator &bringDataToL1(const DataBlock &data_block);
+    CacheSimulator &bringDataToL1(const uint &address, const DataBlock::State &state);
+//    CacheSimulator &bringDataToL2(const DataBlock &data_block);
+    CacheSimulator &bringDataToL2(const uint &address, const DataBlock::State &state);
     CacheSimulator &bringDataFromMemory(const uint &address);
 
 private: //members
